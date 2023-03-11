@@ -15,26 +15,12 @@ function movieToDOM(movie) {
 
   const a = document.createElement('a');
   a.setAttribute('href', `movie-details.html?id=${movie.id}`);
-  a.appendChild(movieImage(movie));
+  a.appendChild(displayImage('movie', movie));
 
   div.appendChild(a);
   div.appendChild(movieBody(movie));
 
   document.querySelector('#popular-movies').appendChild(div);
-}
-
-function movieImage(movie) {
-  const img = document.createElement('img');
-  img.classList.add('card-img-top');
-  movie.poster_path
-    ? img.setAttribute(
-        'src',
-        `https://image.tmdb.org/t/p/w500${movie.poster_path}`
-      )
-    : img.setAttribute('src', 'images/no-image.jpg');
-  img.setAttribute('alt', movie.title);
-
-  return img;
 }
 
 function movieBody(movie) {
@@ -62,6 +48,8 @@ async function displayMovieDetails() {
   const movieID = window.location.search.split('=')[1];
 
   const movie = await fetchApi(`movie/${movieID}`);
+
+  displayBackgroundImage('movie', movie.backdrop_path);
 
   document.querySelector('#movie-details').appendChild(movieDetailsTop(movie));
   document
@@ -113,7 +101,7 @@ function movieDetailsTop(movie) {
   div2.appendChild(a);
 
   const div1 = document.createElement('div');
-  div1.appendChild(movieImage(movie));
+  div1.appendChild(displayImage('movie', movie));
 
   const top = document.createElement('div');
   top.classList.add('details-top');
@@ -163,7 +151,9 @@ function movieDetailsBottom(movie) {
 function createMovieListItem(movie, property) {
   const li = document.createElement('li');
   const span = document.createElement('span');
-  const text = document.createTextNode(property + ': ');
+  const str = property;
+  const capitalizedStr = str.charAt(0).toUpperCase() + str.slice(1);
+  const text = document.createTextNode(capitalizedStr + ': ');
   let value;
   switch (property) {
     case 'budget':
@@ -185,10 +175,6 @@ function createMovieListItem(movie, property) {
   return li;
 }
 
-function numberWithCommas(x) {
-  return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-}
-
 // tv show
 
 async function displayShows() {
@@ -205,26 +191,12 @@ function showToDOM(show) {
 
   const a = document.createElement('a');
   a.setAttribute('href', `tv-details.html?id=${show.id}`);
-  a.appendChild(showImage(show));
+  a.appendChild(displayImage('show', show));
 
   div.appendChild(a);
   div.appendChild(showBody(show));
 
   document.querySelector('#popular-shows').appendChild(div);
-}
-
-function showImage(show) {
-  const img = document.createElement('img');
-  img.classList.add('card-img-top');
-  show.poster_path
-    ? img.setAttribute(
-        'src',
-        `https://image.tmdb.org/t/p/w500${show.poster_path}`
-      )
-    : img.setAttribute('src', 'images/no-image.jpg');
-  img.setAttribute('alt', show.name);
-
-  return img;
 }
 
 function showBody(show) {
@@ -246,6 +218,181 @@ function showBody(show) {
   div.appendChild(p);
 
   return div;
+}
+
+async function displayShowDetails() {
+  const showID = window.location.search.split('=')[1];
+
+  const show = await fetchApi(`tv/${showID}`);
+
+  displayBackgroundImage('tv', show.backdrop_path);
+
+  document.querySelector('#show-details').appendChild(showDetailsTop(show));
+  document.querySelector('#show-details').appendChild(showDetailsBottom(show));
+  console.log(show);
+}
+
+function showDetailsTop(show) {
+  const a = document.createElement('a');
+  const aText = document.createTextNode('Visit show Homepage');
+  a.href = show.homepage;
+  a.target = '_blank';
+  a.classList.add('btn');
+  a.appendChild(aText);
+
+  const ul = document.createElement('ul');
+  ul.classList.add('list-group');
+  ul.innerHTML = show.genres.map((genre) => `<li>${genre.name}</li>`).join('');
+
+  const h5 = document.createElement('h5');
+  h5.textContent = 'Genres';
+
+  const p3 = document.createElement('p');
+  p3.textContent = show.overview;
+
+  const p2 = document.createElement('p');
+  p2.classList.add('text-muted');
+  p2.textContent = `Release Date: ${show.first_air_date}`;
+
+  const i = document.createElement('i');
+  const p1 = document.createElement('p');
+  const p1Text = document.createTextNode(
+    ` ${show.vote_average.toFixed(1)} / 10`
+  );
+  i.classList.add('fas', 'fa-star', 'text-primary');
+  p1.appendChild(i);
+  p1.appendChild(p1Text);
+
+  const h2 = document.createElement('h2');
+  h2.textContent = show.name;
+
+  const div2 = document.createElement('div');
+  div2.appendChild(h2);
+  div2.appendChild(p1);
+  div2.appendChild(p2);
+  div2.appendChild(p3);
+  div2.appendChild(h5);
+  div2.appendChild(ul);
+  div2.appendChild(a);
+
+  const div1 = document.createElement('div');
+  div1.appendChild(displayImage('show', show));
+
+  const top = document.createElement('div');
+  top.classList.add('details-top');
+  top.appendChild(div1);
+  top.appendChild(div2);
+
+  return top;
+}
+
+function showDetailsBottom(show) {
+  const div = document.createElement('div');
+  div.classList.add('list-group');
+
+  const span = document.createElement('span');
+  span.innerHTML = show.production_companies
+    .map((company) => `${company.name}`)
+    .join(', ');
+
+  const h4 = document.createElement('h4');
+  h4.textContent = 'Productions Companies';
+
+  const numberEpLi = createShowListItem(
+    'number_of_episodes',
+    'Number Of Episodes',
+    show
+  );
+  const latestLi = createShowListItem(
+    'last_episode_to_air',
+    'Last Episode To Air',
+    show
+  );
+  const statusLi = createShowListItem('status', 'Status', show);
+
+  const ul = document.createElement('ul');
+  ul.appendChild(numberEpLi);
+  ul.appendChild(latestLi);
+  ul.appendChild(statusLi);
+
+  const h2 = document.createElement('h2');
+  h2.textContent = 'show Info';
+
+  const bottom = document.createElement('div');
+  bottom.classList.add('details-bottom');
+  bottom.appendChild(h2);
+  bottom.appendChild(ul);
+  bottom.appendChild(h4);
+  bottom.appendChild(span);
+  bottom.appendChild(div);
+
+  return bottom;
+}
+
+function createShowListItem(property, text, show) {
+  const li = document.createElement('li');
+  const span = document.createElement('span');
+  const spanText = document.createTextNode(`${text}: `);
+  const spanClass = 'text-secondary';
+  let liText;
+
+  switch (property) {
+    case 'number_of_episodes':
+      liText = document.createTextNode(show.number_of_episodes);
+      break;
+    case 'last_episode_to_air':
+      liText = document.createTextNode(show.last_episode_to_air.name);
+      break;
+    case 'status':
+      liText = document.createTextNode(show.status);
+      break;
+  }
+
+  span.appendChild(spanText);
+  span.classList.add(spanClass);
+  li.appendChild(span);
+  li.appendChild(liText);
+
+  return li;
+}
+
+function displayImage(type, data) {
+  const img = document.createElement('img');
+  img.classList.add('card-img-top');
+  data.poster_path
+    ? img.setAttribute(
+        'src',
+        `https://image.tmdb.org/t/p/w500${data.poster_path}`
+      )
+    : img.setAttribute('src', 'images/no-image.jpg');
+
+  type === 'movie'
+    ? img.setAttribute('alt', data.title)
+    : img.setAttribute('alt', data.name);
+  return img;
+}
+
+function numberWithCommas(x) {
+  return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+}
+
+function displayBackgroundImage(type, bgPath) {
+  const div = document.createElement('div');
+  div.style.backgroundImage = `url(https://image.tmdb.org/t/p/original/${bgPath})`;
+  div.style.backgroundSize = 'cover';
+  div.style.backgroundPosition = 'center';
+  div.style.backgroundRepeat = 'no-repeat';
+  div.style.height = '105.5vh';
+  div.style.width = '100vw';
+  div.style.position = 'absolute';
+  div.style.top = '0';
+  div.style.left = '0';
+  div.style.zIndex = '-1';
+  div.style.opacity = '0.2';
+
+  type === 'movie'
+    ? document.querySelector('#movie-details').appendChild(div)
+    : document.querySelector('#show-details').appendChild(div);
 }
 
 async function fetchApi(endpoint) {
@@ -294,6 +441,7 @@ function init() {
       displayMovieDetails();
       break;
     case '/tv-details.html':
+      displayShowDetails();
       break;
     case '/search.html':
       break;
